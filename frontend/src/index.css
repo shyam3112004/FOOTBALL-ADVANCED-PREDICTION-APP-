@@ -1,0 +1,210 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── CSS Custom Properties ─────────────────────────────────────────────────── */
+:root {
+  --color-bg-primary: #0A0E1A;
+  --color-bg-card: #111827;
+  --color-bg-elevated: #1C2537;
+  --color-border: #1F2937;
+  --color-accent-green: #00FF87;
+  --color-accent-blue: #3B82F6;
+  --color-danger: #EF4444;
+  --color-warning: #F59E0B;
+  --color-text-primary: #F9FAFB;
+  --color-text-secondary: #9CA3AF;
+}
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #111827;
+}
+::-webkit-scrollbar-thumb {
+  background: #2d3748;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4a5568;
+}
+
+/* ── Animated Probability Bar ──────────────────────────────────────────────── */
+.prob-bar-track {
+  @apply relative h-2.5 rounded-full overflow-hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.prob-bar-fill {
+  @apply absolute left-0 top-0 h-full rounded-full transition-all duration-500;
+  width: 0%;
+}
+
+.prob-bar-fill.animated {
+  animation: fillBar 0.85s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes fillBar {
+  from { width: 0%; }
+  to { width: var(--bar-target-width); }
+}
+
+/* ── Probability color scale ────────────────────────────────────────────────── */
+.prob-high   { background: linear-gradient(90deg, #00CC6A, #00FF87); }
+.prob-medium { background: linear-gradient(90deg, #D97706, #F59E0B); }
+.prob-low    { background: linear-gradient(90deg, #B91C1C, #EF4444); }
+
+/* ── Card styles ───────────────────────────────────────────────────────────── */
+.prediction-card {
+  @apply rounded-xl border border-[#1F2937] bg-[#111827] p-4 transition-all duration-300;
+}
+.prediction-card:hover {
+  border-color: rgba(0, 255, 135, 0.2);
+  box-shadow: 0 0 24px rgba(0, 255, 135, 0.05);
+}
+
+/* ── Tab underline ─────────────────────────────────────────────────────────── */
+.tab-active {
+  @apply text-accent-green border-b-2 border-accent-green;
+}
+.tab-inactive {
+  @apply text-text-secondary hover:text-text-primary border-b-2 border-transparent;
+}
+
+/* ── Run button pulse ──────────────────────────────────────────────────────── */
+.run-btn {
+  @apply font-heading font-bold rounded-xl tracking-wider uppercase transition-all duration-300;
+  background: linear-gradient(135deg, #00FF87 0%, #00CC6A 100%);
+  color: #0A0E1A;
+  box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.4);
+  animation: pulseGreen 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.run-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 255, 135, 0.35);
+  animation: none;
+}
+
+.run-btn:active {
+  transform: translateY(0);
+}
+
+@keyframes pulseGreen {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.4); }
+  50%       { box-shadow: 0 0 0 10px rgba(0, 255, 135, 0); }
+}
+
+/* ── Score Grid (heat map) ─────────────────────────────────────────────────── */
+.score-cell {
+  @apply text-xs font-bold rounded cursor-pointer transition-all duration-200;
+  aspect-ratio: 1;
+}
+.score-cell:hover {
+  transform: scale(1.15);
+  z-index: 10;
+}
+
+/* ── Pitch SVG ─────────────────────────────────────────────────────────────── */
+.pitch-player {
+  cursor: pointer;
+  transition: filter 0.2s, transform 0.2s;
+}
+.pitch-player:hover {
+  filter: drop-shadow(0 0 8px rgba(0, 255, 135, 0.8));
+  transform-origin: center;
+}
+
+/* ── Confidence badge ──────────────────────────────────────────────────────── */
+.confidence-badge {
+  @apply text-xs font-bold px-2 py-0.5 rounded-full;
+}
+.badge-high   { background: rgba(0,204,106,0.2); color: #00FF87; }
+.badge-medium { background: rgba(245,158,11,0.2); color: #F59E0B; }
+.badge-low    { background: rgba(239,68,68,0.2); color: #EF4444; }
+
+/* ── Glassmorphism ─────────────────────────────────────────────────────────── */
+.glass {
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ── Drop zone ─────────────────────────────────────────────────────────────── */
+.drop-zone {
+  @apply border-2 border-dashed rounded-xl transition-all duration-200 cursor-pointer;
+  border-color: #2D3748;
+}
+.drop-zone.drag-over {
+  border-color: var(--color-accent-green);
+  background: rgba(0, 255, 135, 0.04);
+}
+
+/* ── Formation player nodes ────────────────────────────────────────────────── */
+.player-node {
+  transition: all 0.25s ease;
+}
+.player-node:hover .player-circle {
+  filter: drop-shadow(0 0 8px rgba(0, 255, 135, 0.9));
+}
+
+/* ── Skeleton loading ──────────────────────────────────────────────────────── */
+.skeleton {
+  @apply rounded animate-pulse;
+  background: linear-gradient(90deg, #1C2537 25%, #243047 50%, #1C2537 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Implied odds badge ────────────────────────────────────────────────────── */
+.odds-badge {
+  @apply text-xs px-1.5 py-0.5 rounded font-mono;
+  background: rgba(59, 130, 246, 0.15);
+  color: #3B82F6;
+}
+
+/* ── Player position badge ─────────────────────────────────────────────────── */
+.pos-GK  { background: rgba(217,119,6,0.25); color: #FCD34D; }
+.pos-DEF { background: rgba(37,99,235,0.25); color: #60A5FA; }
+.pos-MID { background: rgba(0,204,106,0.25); color: #34D399; }
+.pos-FWD { background: rgba(239,68,68,0.25); color: #F87171; }
+
+/* ── Header glow line ──────────────────────────────────────────────────────── */
+.header-glow {
+  box-shadow: 0 1px 0 rgba(0, 255, 135, 0.15), 0 4px 24px rgba(0,0,0,0.4);
+}
