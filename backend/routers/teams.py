@@ -1,8 +1,15 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from typing import Optional
-from services.football_api import football_api
 
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+from services.football_api import football_api
+from logger import get_logger
+
+logger = get_logger(__name__)
 router = APIRouter(prefix="/api", tags=["teams"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.get("/competitions")
@@ -49,3 +56,21 @@ async def get_match(match_id: int):
     """Fetch details for a specific match."""
     match = await football_api.get_match_details(match_id)
     return match
+
+
+@router.get("/matches/{match_id}/injuries")
+async def get_injuries(match_id: int):
+    """
+    Proxy injuries for a match from API-Football.
+    Keys are never exposed to the browser — all calls go through this endpoint.
+    """
+    logger.info("Fetching injuries for match %d", match_id)
+    injuries = await football_api.get_injuries(match_id)
+    return {"match_id": match_id, "injuries": injuries, "count": len(injuries)}
+
+
+@router.get("/live")
+async def get_live_matches():
+    """Proxy live matches from API-Football."""
+    matches = await football_api.get_live_matches()
+    return {"matches": matches, "count": len(matches)}

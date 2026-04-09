@@ -191,6 +191,32 @@ body {
   100% { background-position: -200% 0; }
 }
 
+/* ── Date Picker Fix ───────────────────────────────────────────────────────── */
+input[type="date"] {
+  position: relative;
+  min-height: 1.5rem;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0.8) sepia(100%) saturate(500%) hue-rotate(90deg); /* align with accent-green */
+  opacity: 0.6;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Fix for the black box overlay glitch in some browsers */
+input[type="date"]::-webkit-datetime-edit {
+  color: var(--color-text-primary);
+}
+
+::-webkit-calendar-picker {
+  background-color: var(--color-bg-elevated) !important;
+  color: var(--color-text-primary) !important;
+}
+
 /* ── Implied odds badge ────────────────────────────────────────────────────── */
 .odds-badge {
   @apply text-xs px-1.5 py-0.5 rounded font-mono;

@@ -44,3 +44,12 @@ Thumbs.db
 # ─── Logs ──────────────────────────────────────────────────────────────────────
 *.log
 logs/
+
+# ─── Database & Model Artifacts ────────────────────────────────────────────────
+backend/data/
+data/
+*.db
+backend/model_cache/
+
+# ─── Alembic ────────────────────────────────────────────────────────────────────
+backend/alembic/versions/__pycache__/

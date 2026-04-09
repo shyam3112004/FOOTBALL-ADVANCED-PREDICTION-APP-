@@ -3,11 +3,12 @@ import { PredictionCard, ProbBar, PredictionCardSkeleton } from '../components/P
 import CorrectScoreGrid from '../components/CorrectScoreGrid';
 import GoalIntervalChart from '../components/GoalIntervalChart';
 import PlayerScorerList from '../components/PlayerScorerList';
+import ErrorBoundary from '../components/ErrorBoundary';
 import { toPercent, toDecimalOdds } from '../utils/oddsConverter';
 import { probToColor } from '../utils/colorScale';
 import { useLiveFeed } from '../hooks/useLiveFeed';
 import { normalizeTeamName } from '../utils/dateUtils';
-import { Activity, Clock, Zap, Target, TrendingUp } from 'lucide-react';
+import { Activity, Zap, Target, TrendingUp, BarChart2, Star } from 'lucide-react';
 
 const TABS = [
   { id: 'result',   label: 'Match Result' },
@@ -20,15 +21,30 @@ const TABS = [
 
 function EmptyState() {
   return (
-    <div className="h-full flex flex-col items-center justify-center text-center py-16 space-y-4">
-      <div className="text-6xl opacity-20">⚽</div>
-      <div>
-        <h3 className="font-heading font-bold text-xl text-text-secondary">
-          No Predictions Yet
+    <div className="h-full flex flex-col items-center justify-center text-center py-16 space-y-6 animate-fade-in">
+      <div className="relative">
+        <div className="text-7xl opacity-10 select-none">⚽</div>
+        <div className="absolute inset-0 animate-ping-slow opacity-5 text-7xl select-none">⚽</div>
+      </div>
+      <div className="space-y-2">
+        <h3 className="font-heading font-bold text-2xl text-text-secondary">
+          Ready to Predict?
         </h3>
-        <p className="text-sm text-text-muted mt-1">
-          Select a match and press "Run Predictions"
+        <p className="text-sm text-text-muted max-w-xs mx-auto leading-relaxed">
+          Select a league and match above, then press{' '}
+          <span className="text-accent-green font-semibold">Run Predictions</span>{' '}
+          to generate AI-powered odds across 10+ markets.
         </p>
+      </div>
+      {/* Feature pills */}
+      <div className="flex flex-wrap gap-2 justify-center max-w-xs">
+        {['1X2 Odds', 'Correct Score', 'BTTS', 'Over/Under', 'Goal Intervals', 'Player Scorers'].map(feat => (
+          <span key={feat}
+            className="text-[10px] px-2 py-1 rounded-full bg-bg-elevated
+                       border border-[#2D3748] text-text-muted">
+            {feat}
+          </span>
+        ))}
       </div>
     </div>
   );
@@ -175,8 +191,8 @@ function ScorersTab({ data }) {
   );
 }
 
-function LiveTab({ matchId, homeTeam, awayTeam }) {
-  const { liveMatches, matchStats, loading } = useLiveFeed(matchId);
+function LiveTab({ matchId, homeTeam, awayTeam, activeTab }) {
+  const { liveMatches, matchStats, loading, lastUpdated } = useLiveFeed(matchId, activeTab);
 
   // Search for the match by ID or fuzzy name match
   const activeLiveMatch = liveMatches.find(m => {
@@ -295,8 +311,37 @@ function LiveTab({ matchId, homeTeam, awayTeam }) {
   );
 }
 
-export default function Dashboard({ predictions, loading, homeTeam, awayTeam }) {
+import BatchResultsTable from '../components/BatchResultsTable';
+
+export default function Dashboard({ 
+  predictions, 
+  loading, 
+  homeTeam, 
+  awayTeam,
+  batchMode = false,
+  batchResults = [],
+  onExportBatch = () => {},
+  batchExportLoading = false
+}) {
+  console.log('Dashboard Props:', { batchMode, resultsCount: batchResults?.length, loading });
   const [activeTab, setActiveTab] = useState('result');
+
+  if (batchMode) {
+    return (
+      <div className="h-full">
+        {batchResults.length === 0 && !loading ? (
+          <EmptyState />
+        ) : (
+          <BatchResultsTable 
+            results={batchResults} 
+            onExport={onExportBatch} 
+            loading={loading} 
+            exporting={batchExportLoading}
+          />
+        )}
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -315,16 +360,17 @@ export default function Dashboard({ predictions, loading, homeTeam, awayTeam }) 
   if (!predictions) return <EmptyState />;
 
   const TAB_COMPONENTS = {
-    result:   <MatchResultTab data={predictions} />,
-    goals:    <GoalsTab data={predictions} />,
-    score:    <ScoreTab data={predictions} />,
-    specials: <SpecialsTab data={predictions} />,
-    scorers:  <ScorersTab data={predictions} />,
-    live:     <LiveTab 
+    result:   <ErrorBoundary componentName="Match Result"><MatchResultTab data={predictions} /></ErrorBoundary>,
+    goals:    <ErrorBoundary componentName="Goals"><GoalsTab data={predictions} /></ErrorBoundary>,
+    score:    <ErrorBoundary componentName="Score Grid"><ScoreTab data={predictions} /></ErrorBoundary>,
+    specials: <ErrorBoundary componentName="Specials"><SpecialsTab data={predictions} /></ErrorBoundary>,
+    scorers:  <ErrorBoundary componentName="Player Scorers"><ScorersTab data={predictions} /></ErrorBoundary>,
+    live:     <ErrorBoundary componentName="Live Centre"><LiveTab 
                 matchId={predictions.fixture_id_map?.api_football} 
                 homeTeam={homeTeam} 
-                awayTeam={awayTeam} 
-              />,
+                awayTeam={awayTeam}
+                activeTab={activeTab}
+              /></ErrorBoundary>,
   };
 
   return (

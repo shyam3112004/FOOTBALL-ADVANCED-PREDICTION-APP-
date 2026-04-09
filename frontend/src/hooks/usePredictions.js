@@ -1,15 +1,23 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import api from '../services/apiClient';
+import usePredictionStore from '../store/predictionStore';
 
+/**
+ * usePredictions — reads/writes to Zustand store instead of local useState.
+ * Keeps the same public interface so App.jsx callers are unchanged.
+ */
 export function usePredictions() {
-  const [predictions, setPredictions] = useState(null);
-  const [predictionId, setPredictionId] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [modelStatus, setModelStatus] = useState({
-    is_trained: false,
-    training_samples: 0,
-  });
+  const predictions = usePredictionStore(state => state.predictions);
+  const predictionId = usePredictionStore(state => state.predictionId);
+  const loading = usePredictionStore(state => state.loading);
+  const error = usePredictionStore(state => state.error);
+  const modelStatus = usePredictionStore(state => state.modelStatus);
+
+  const setPredictions = usePredictionStore(state => state.setPredictions);
+  const setLoading = usePredictionStore(state => state.setLoading);
+  const setError = usePredictionStore(state => state.setError);
+  const clearPredictions = usePredictionStore(state => state.clearPredictions);
+  const setModelStatus = usePredictionStore(state => state.setModelStatus);
 
   const runPredictions = useCallback(async (payload) => {
     setLoading(true);
@@ -17,27 +25,27 @@ export function usePredictions() {
     try {
       const { data } = await api.post('/api/predict', payload);
       setPredictions(data);
-      setPredictionId(data.prediction_id);
       setModelStatus({
-        is_trained: data.is_trained,
+        is_trained:       data.is_trained,
         training_samples: data.training_samples,
+        metrics:          data.metrics || {},
       });
       return data;
     } catch (err) {
       const msg = err.response?.data?.detail || err.message || 'Prediction failed';
-      setError(msg);
+      setError(Array.isArray(msg)
+        ? msg.map((e) => e.msg ?? JSON.stringify(e)).join(', ')
+        : msg);
       return null;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setLoading, setError, setPredictions, setModelStatus]);
 
   const exportExcel = useCallback(async () => {
     if (!predictionId) return;
     try {
-      const resp = await api.get(`/api/export/${predictionId}`, {
-        responseType: 'blob',
-      });
+      const resp = await api.get(`/api/export/${predictionId}`, { responseType: 'blob' });
       const url = URL.createObjectURL(new Blob([resp.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -47,27 +55,21 @@ export function usePredictions() {
     } catch (err) {
       setError('Export failed: ' + (err.message || ''));
     }
-  }, [predictionId]);
+  }, [predictionId, setError]);
 
   const fetchModelStatus = useCallback(async () => {
     try {
       const { data } = await api.get('/api/model/status');
       setModelStatus(data);
-    } catch {}
-  }, []);
+    } catch { /* silent */ }
+  }, [setModelStatus]);
 
   const trainCompetition = useCallback(async (code) => {
     try {
       await api.post(`/api/train/competition/${code}`);
       await fetchModelStatus();
-    } catch {}
+    } catch { /* silent */ }
   }, [fetchModelStatus]);
-
-  const clearPredictions = useCallback(() => {
-    setPredictions(null);
-    setPredictionId(null);
-    setError(null);
-  }, []);
 
   return {
     predictions,
